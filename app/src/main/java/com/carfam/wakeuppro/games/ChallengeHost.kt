@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +71,7 @@ fun ChallengeHost(
     settings: AppSettings,
     store: Store,
     practice: Boolean,
+    onAlarmOff: () -> Unit = {},
     onStop: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
@@ -125,6 +129,8 @@ fun ChallengeHost(
 
     if (!started) {
         RingScreen(fmt.format(Date(now))) { started = true }
+    } else if (step >= count && !practice) {
+        DoneContent(false, fmt.format(Date(now)), onAlarmOff, onStop)
     } else {
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -156,7 +162,7 @@ fun ChallengeHost(
             Crossfade(targetState = step * 100 + attempt, animationSpec = tween(350), label = "game") { key ->
                 val s = key / 100
                 if (s >= count) {
-                    DoneContent(practice, onStop)
+                    DoneContent(practice, fmt.format(Date(now)), onAlarmOff, onStop)
                 } else {
                     val pz = remember(key) { Engine.puzzle(types[s], diff, store) }
                     GameScreen(pz, onResult)
@@ -229,34 +235,46 @@ private fun GameBody(p: Puzzle, onResult: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
+private fun DoneContent(practice: Boolean, time: String, onAlarmOff: () -> Unit, onStop: () -> Unit) {
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         shown = true
-        if (!practice) {
-            onStop()
-        } else {
-            delay(2500L)
-            onStop()
-        }
+        if (!practice) onAlarmOff() // sound + vibration stop right now
+        delay(if (practice) 2500L else 3500L)
+        onStop()
     }
     val scale by animateFloatAsState(
         targetValue = if (shown) 1f else 0.3f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "done"
     )
+    val sky = Brush.verticalGradient(listOf(Color(0xFF0B1230), Color(0xFF1E3A8A), Color(0xFFB45309)))
+    val sun = Brush.linearGradient(listOf(Color(0xFFFFE08A), Color(0xFFFF8A3D)))
     Column(
-        Modifier.fillMaxSize().scale(scale),
+        Modifier.fillMaxSize().background(sky).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("🎉", fontSize = 90.sp)
-        Spacer(Modifier.height(10.dp))
-        Text("Brain awake!", fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = cs.onBackground)
-        Text(if (practice) "All challenges completed" else "Alarm stopped automatically", color = cs.onSurfaceVariant, fontSize = 16.sp)
+        Box(
+            Modifier.size(170.dp).scale(scale).clip(CircleShape).background(sun),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("☀️", fontSize = 84.sp)
+        }
+        Spacer(Modifier.height(34.dp))
+        Text(
+            if (practice) "BRAIN AWAKE!" else "GOOD MORNING!",
+            fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = Color.White, textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            if (practice) "All challenges completed" else "Alarm dismissed. You are awake and ready 💪",
+            fontSize = 16.sp, color = Color(0xFFDCE4FF), textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(18.dp))
+        Text(time, fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFE08A))
         if (practice) {
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(30.dp))
             PrimaryButton("FINISH", color = Good, onClick = onStop)
         }
     }
