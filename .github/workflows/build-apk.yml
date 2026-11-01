@@ -27,7 +27,19 @@ jobs:
           gradle-version: 8.7
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --console=plain 2>&1 | tee build.log
+
+      - name: Show build errors
+        if: failure()
+        run: |
+          {
+            echo '## Build errors (first 60 lines)'
+            echo '```'
+            grep -E '^e: |What went wrong|^> |error:|FAILED|Unresolved|Could not' build.log | head -60
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
