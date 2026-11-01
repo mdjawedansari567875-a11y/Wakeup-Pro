@@ -1,21 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- legs -->
     <path
-        android:fillColor="#3D7BFF"
-        android:pathData="M54,28 A26,26 0 1,1 53.99,28 Z" />
-    <path
-        android:fillColor="#8B5CF6"
-        android:pathData="M30,36 A10,10 0 1,1 44,30 Z" />
-    <path
-        android:fillColor="#8B5CF6"
-        android:pathData="M78,36 A10,10 0 1,0 64,30 Z" />
-    <path
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#FFE2E8FF"
         android:strokeWidth="4"
         android:strokeLineCap="round"
-        android:pathData="M54,54 L54,40 M54,54 L64,60" />
+        android:pathData="M40,83 L35,89 M68,83 L73,89" />
+    <!-- bells -->
+    <path android:pathData="M20,34 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="20" android:startY="23"
+                android:endX="42" android:endY="45">
+                <item android:offset="0.0" android:color="#FFFFD76A" />
+                <item android:offset="1.0" android:color="#FFFF9F43" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M66,34 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="66" android:startY="23"
+                android:endX="88" android:endY="45">
+                <item android:offset="0.0" android:color="#FFFFD76A" />
+                <item android:offset="1.0" android:color="#FFFF9F43" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- clock body -->
+    <path android:pathData="M26,58 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="26" android:startY="30"
+                android:endX="82" android:endY="86">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="1.0" android:color="#FFC9D3FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- clock face -->
+    <path android:pathData="M32,58 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="32" android:startY="36"
+                android:endX="76" android:endY="80">
+                <item android:offset="0.0" android:color="#FF1B2A6B" />
+                <item android:offset="1.0" android:color="#FF0A1038" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- ticks -->
+    <path
+        android:strokeColor="#99FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M54,39.5 L54,42 M54,74 L54,76.5 M35.5,58 L38,58 M70,58 L72.5,58" />
+    <!-- hands -->
+    <path
+        android:strokeColor="#FF7DD3FC"
+        android:strokeWidth="3.4"
+        android:strokeLineCap="round"
+        android:pathData="M54,58 L54,45" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.4"
+        android:strokeLineCap="round"
+        android:pathData="M54,58 L63,63" />
+    <path android:fillColor="#FFFFD76A" android:pathData="M50.5,58 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 Z" />
 </vector>
