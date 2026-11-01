@@ -35,9 +35,9 @@ jobs:
         if: failure()
         run: |
           {
-            echo '## Build errors (first 60 lines)'
+            echo '## Kotlin errors (compact)'
             echo '```'
-            grep -E '^e: |What went wrong|^> |error:|FAILED|Unresolved|Could not' build.log | head -60
+            grep -E '^e: ' build.log | sed -E 's#file:///[^ ]*/com/carfam/wakeuppro/##' | cut -c1-160 | head -60
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
