@@ -83,6 +83,7 @@ class AlarmService : Service() {
         }
         startSound()
         startVibration()
+        if (k == K.KIND_ALARM) openRingScreen()
 
         handler.removeCallbacksAndMessages(null)
         if (k == K.KIND_TIMER) {
@@ -104,6 +105,18 @@ class AlarmService : Service() {
         super.onDestroy()
     }
 
+    /** Opens the alarm screen right away (works when the phone is in use); lock screen uses the full-screen intent. */
+    private fun openRingScreen() {
+        try {
+            startActivity(
+                Intent(this, AlarmRingActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            )
+        } catch (_: Exception) {
+            // Background launch blocked: the full-screen notification handles it.
+        }
+    }
+
     // ---------------- Sound ----------------
 
     private fun candidateUris(custom: String): List<Uri> {
@@ -123,24 +136,53 @@ class AlarmService : Service() {
         val vol = (max * (s.volume / 100f)).roundToInt().coerceIn(1, max)
         try { am.setStreamVolume(AudioManager.STREAM_ALARM, vol, 0) } catch (_: Exception) {}
 
-        for (uri in candidateUris(s.soundUri)) {
-            try {
-                val mp = MediaPlayer()
-                mp.setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-                mp.setDataSource(this, uri)
-                mp.isLooping = true
-                mp.prepare()
-                mp.start()
-                player = mp
-                return
-            } catch (_: Exception) {
-                // try next candidate
-            }
+        // 1) custom sound chosen in Settings, 2) bundled Extreme Alarm Tone, 3) system sounds
+        if (s.soundUri.isNotBlank() && playUri(Uri.parse(s.soundUri))) return
+        if (playBundled()) return
+        for (uri in candidateUris("")) {
+            if (playUri(uri)) return
+        }
+    }
+
+    private fun alarmAttrs(): AudioAttributes =
+        AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+
+    private fun playBundled(): Boolean {
+        val id = resources.getIdentifier("alarm_tone", "raw", packageName)
+        if (id == 0) return false
+        return try {
+            val afd = resources.openRawResourceFd(id)
+            val mp = MediaPlayer()
+            mp.setAudioAttributes(alarmAttrs())
+            mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            afd.close()
+            mp.isLooping = true
+            mp.setVolume(1f, 1f)
+            mp.prepare()
+            mp.start()
+            player = mp
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun playUri(uri: Uri): Boolean {
+        return try {
+            val mp = MediaPlayer()
+            mp.setAudioAttributes(alarmAttrs())
+            mp.setDataSource(this, uri)
+            mp.isLooping = true
+            mp.setVolume(1f, 1f)
+            mp.prepare()
+            mp.start()
+            player = mp
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -181,7 +223,7 @@ class AlarmService : Service() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val pi = PendingIntent.getActivity(this, 1, ring, flags)
             b.setContentTitle("WAKEUP PRO - Alarm")
-                .setContentText("Solve the brain challenge to stop the alarm")
+                .setContentText("Tap to stop the alarm")
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(pi, true)
                 .setContentIntent(pi)
