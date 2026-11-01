@@ -234,8 +234,12 @@ private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         shown = true
-        delay(1500)
-        onStop()
+        if (!practice) {
+            onStop()
+        } else {
+            delay(2500L)
+            onStop()
+        }
     }
     val scale by animateFloatAsState(
         targetValue = if (shown) 1f else 0.3f,
@@ -250,14 +254,11 @@ private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
         Text("🎉", fontSize = 90.sp)
         Spacer(Modifier.height(10.dp))
         Text("Brain awake!", fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = cs.onBackground)
-        Text(if (practice) "All challenges completed" else "Alarm stopped", color = cs.onSurfaceVariant, fontSize = 16.sp)
-        Spacer(Modifier.height(36.dp))
-        PrimaryButton(
-            if (practice) "FINISH" else "STOP ALARM",
-            modifier = Modifier.height(96.dp),
-            color = Good,
-            onClick = onStop
-        )
+        Text(if (practice) "All challenges completed" else "Alarm stopped automatically", color = cs.onSurfaceVariant, fontSize = 16.sp)
+        if (practice) {
+            Spacer(Modifier.height(36.dp))
+            PrimaryButton("FINISH", color = Good, onClick = onStop)
+        }
     }
 }
 
