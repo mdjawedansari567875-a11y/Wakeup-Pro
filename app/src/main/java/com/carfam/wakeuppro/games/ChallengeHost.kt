@@ -1,7 +1,11 @@
 package com.carfam.wakeuppro.games
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -76,6 +80,7 @@ fun ChallengeHost(
     var fails by remember { mutableIntStateOf(0) }
     var feedback by remember { mutableIntStateOf(0) } // 0 none, 1 correct, 2 wrong
     val scope = rememberCoroutineScope()
+    var started by remember { mutableStateOf(practice) }
 
     fun finishAll() {
         if (!practice) {
@@ -118,6 +123,9 @@ fun ChallengeHost(
         SimpleDateFormat(if (settings.is24h) "HH:mm" else "hh:mm a", Locale.getDefault())
     }
 
+    if (!started) {
+        RingScreen(fmt.format(Date(now))) { started = true }
+    } else {
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(fmt.format(Date(now)), fontSize = 38.sp, fontWeight = FontWeight.ExtraBold, color = cs.onBackground)
@@ -167,6 +175,7 @@ fun ChallengeHost(
                 }
             }
         }
+    }
     }
 }
 
@@ -223,7 +232,11 @@ private fun GameBody(p: Puzzle, onResult: (Boolean) -> Unit) {
 private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { shown = true }
+    LaunchedEffect(Unit) {
+        shown = true
+        delay(1500)
+        onStop()
+    }
     val scale by animateFloatAsState(
         targetValue = if (shown) 1f else 0.3f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -237,7 +250,7 @@ private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
         Text("🎉", fontSize = 90.sp)
         Spacer(Modifier.height(10.dp))
         Text("Brain awake!", fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = cs.onBackground)
-        Text("All challenges completed", color = cs.onSurfaceVariant, fontSize = 16.sp)
+        Text(if (practice) "All challenges completed" else "Alarm stopped", color = cs.onSurfaceVariant, fontSize = 16.sp)
         Spacer(Modifier.height(36.dp))
         PrimaryButton(
             if (practice) "FINISH" else "STOP ALARM",
@@ -245,5 +258,33 @@ private fun DoneContent(practice: Boolean, onStop: () -> Unit) {
             color = Good,
             onClick = onStop
         )
+    }
+}
+
+@Composable
+private fun RingScreen(time: String, onTap: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val inf = rememberInfiniteTransition(label = "pulse")
+    val pulse by inf.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.07f,
+        animationSpec = infiniteRepeatable(tween(550), RepeatMode.Reverse),
+        label = "p"
+    )
+    Column(
+        Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("⏰", fontSize = 84.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(time, fontSize = 64.sp, fontWeight = FontWeight.ExtraBold, color = cs.onBackground)
+        Text("WAKE UP!", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = cs.primary)
+        Spacer(Modifier.height(54.dp))
+        Box(Modifier.scale(pulse)) {
+            PrimaryButton("STOP ALARM", color = Bad, onClick = onTap)
+        }
+        Spacer(Modifier.height(14.dp))
+        Text("Tap, then finish the brain games", fontSize = 14.sp, color = cs.onSurfaceVariant)
     }
 }
