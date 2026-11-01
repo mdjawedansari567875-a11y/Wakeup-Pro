@@ -63,12 +63,12 @@ fun StopwatchTab(store: Store) {
     var running by remember { mutableStateOf(valid && store.getBool("sw_run")) }
     var acc by remember { mutableLongStateOf(if (valid) store.getLong("sw_acc") else 0L) }
     var startAt by remember { mutableLongStateOf(if (valid) store.getLong("sw_start") else 0L) }
-    var laps by remember {
-        mutableStateOf(
-            if (valid) store.getStr("sw_laps").split(",").filter { it.isNotEmpty() }.map { it.toLong() }
-            else emptyList()
-        )
+    val savedLaps: List<Long> = if (valid) {
+        store.getStr("sw_laps").split(",").filter { it.isNotEmpty() }.mapNotNull { it.toLongOrNull() }
+    } else {
+        listOf()
     }
+    var laps by remember { mutableStateOf<List<Long>>(savedLaps) }
     var now by remember { mutableLongStateOf(boot) }
 
     fun persist() {
@@ -102,7 +102,7 @@ fun StopwatchTab(store: Store) {
                 ) { Text("LAP", fontWeight = FontWeight.Bold, fontSize = 18.sp) }
             } else {
                 OutlinedButton(
-                    onClick = { acc = 0L; laps = emptyList(); persist() },
+                    onClick = { acc = 0L; laps = listOf<Long>(); persist() },
                     enabled = elapsed > 0L,
                     modifier = Modifier.weight(1f).height(60.dp), shape = RoundedCornerShape(18.dp)
                 ) { Text("RESET", fontWeight = FontWeight.Bold, fontSize = 18.sp) }
@@ -124,9 +124,11 @@ fun StopwatchTab(store: Store) {
         }
         Spacer(Modifier.height(18.dp))
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            itemsIndexed(laps.reversed()) { revIdx, total ->
-                val i = laps.size - 1 - revIdx
-                val lapTime = total - (if (i > 0) laps[i - 1] else 0L)
+            val lapList: List<Long> = laps
+            itemsIndexed(lapList.reversed()) { revIdx: Int, total: Long ->
+                val i: Int = lapList.size - 1 - revIdx
+                val prev: Long = if (i > 0) lapList[i - 1] else 0L
+                val lapTime: Long = total - prev
                 Row(
                     Modifier.fillMaxWidth().background(cs.surfaceVariant, RoundedCornerShape(14.dp)).padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
