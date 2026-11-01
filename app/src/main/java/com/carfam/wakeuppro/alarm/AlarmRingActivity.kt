@@ -60,6 +60,9 @@ class AlarmRingActivity : ComponentActivity() {
                         settings = settings,
                         store = store,
                         practice = practice,
+                        onAlarmOff = {
+                            if (!practice) AlarmService.stop(this@AlarmRingActivity)
+                        },
                         onStop = {
                             if (!practice) AlarmService.stop(this@AlarmRingActivity)
                             finish()
