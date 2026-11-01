@@ -68,12 +68,20 @@ interface History {
     fun setLastCombo(v: String)
 }
 
+/** Only action / reflex / memory games are used for alarms (no text-quiz questions). */
+val ACTIVE_GAMES: List<GameType> = listOf(
+    GameType.REACTION, GameType.TAP_COUNTER, GameType.SHAKE, GameType.CONTROL_PANEL,
+    GameType.BALANCE, GameType.SIMON, GameType.CATCH_DOT, GameType.SWIPE_ARROWS,
+    GameType.SLIDER_LOCK, GameType.SHORT_TERM_MEMORY, GameType.IMAGE_MATCH,
+    GameType.DIFFERENT_SHAPE, GameType.STROOP, GameType.QUICK_DECISION, GameType.SYMBOL_MATCH
+)
+
 object Engine {
 
     /** Picks [count] distinct game types; none of them were used by the previous alarm. */
     fun pickGames(h: History, count: Int, rng: Random = Random.Default): List<GameType> {
         val last = h.lastCombo().split(",").filter { it.isNotBlank() }
-        val all = GameType.values().toList()
+        val all: List<GameType> = ACTIVE_GAMES
         var pool = all.filter { it.name !in last }
         if (pool.size < count) pool = all
         var pick = pool.shuffled(rng).take(count)
